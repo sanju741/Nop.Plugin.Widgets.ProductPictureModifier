@@ -1,0 +1,11 @@
+﻿{
+  "Group": "Widgets",
+  "FriendlyName": "Product Picture Modifier",
+  "SystemName": "Widgets.ProductPictureModifier",
+  "Version": "2.01",
+  "SupportedVersions": [ "4.10" ],
+  "Author": "Sanju Dahal",
+  "DisplayOrder": 1,
+  "FileName": "Nop.Plugin.Widgets.ProductPictureModifier.dll",
+  "Description": "This plugin allows you to change the product picture in product detail page"
+}

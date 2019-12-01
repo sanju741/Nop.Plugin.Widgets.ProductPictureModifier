@@ -1,0 +1,9 @@
+##ignore files
+.vs/
+[Bb]in
+[Oo]bj
+[Dd]ebug
+[Rr]release
+
+##User Specific files
+*.user

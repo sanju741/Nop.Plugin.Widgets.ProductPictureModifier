@@ -1,0 +1,54 @@
+﻿@using Nop.Plugin.Widgets.ProductPictureModifier
+@using Nop.Web.Framework.UI
+@model Nop.Plugin.Widgets.ProductPictureModifier.Models.ProductPictureModifierModel
+@{
+    Html.AddScriptParts("~/lib/farbtastic/farbtastic.js");
+    Html.AddCssFileParts("~/lib/farbtastic/farbtastic.css");
+}
+
+@*//ensure "ColorCode" has some default value. Otherwise farbtastic won't set a selected value*@
+@*So double check the property*@
+@if (string.IsNullOrEmpty(Model.ColorCode))
+{
+    Model.ColorCode = ProductPictureModifierDefault.DefaultColorCode;
+}
+<div style="display:none">
+    <nop-editor asp-for="ColorCode" />
+</div>
+<div id="color-picker"></div>
+<script>
+    $(document).ready(function(){
+        $('#color-picker').farbtastic('#@Html.IdFor(model => model.ColorCode)');
+    });
+</script>
+
+<script>
+    var productAttributeId = "#product_attribute_";
+    $(document).ready(function () {
+        var labelIdForCustomColor = "";
+        var all = $(".text-prompt").map(function () {
+            if (this.innerHTML.trim() === "@ProductPictureModifierDefault.ProductAttributeName") {
+                labelIdForCustomColor = "#" + this.parentNode.id;
+                var id = labelIdForCustomColor.split("_")[3];
+                $(labelIdForCustomColor).css("display", "none");
+                $(productAttributeId + "input_" + id).css("display", "none");
+                productAttributeId = productAttributeId + id;
+            }
+        }).get();
+
+        var model = @Html.Raw(Json.Serialize(Model));
+        $(".gallery .picture img, .gallery .picture-thumbs img, .variant-picture img")
+            .css("background-color", model.ColorCode);
+    });
+
+    $("#color-picker").on("click",
+        function () {
+            var color = $('#ColorCode').val();
+            $(productAttributeId).val(color);
+            $(".gallery .picture img, .gallery .picture-thumbs img, .variant-picture img")
+                .css("background-color", color);
+        });
+
+
+</script>
+

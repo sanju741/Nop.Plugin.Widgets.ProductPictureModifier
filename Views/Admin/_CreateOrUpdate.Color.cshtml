@@ -1,0 +1,61 @@
+﻿@using Nop.Plugin.Widgets.ProductPictureModifier
+@model Nop.Plugin.Widgets.ProductPictureModifier.Models.ProductPictureModifierModel
+@{
+    Html.AddScriptParts("~/lib/farbtastic/farbtastic.js");
+    Html.AddCssFileParts("~/lib/farbtastic/farbtastic.css");
+}
+<div class="panel-group">
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <div class="form-group ">
+                <div class="col-md-3">
+                    <nop-label asp-for="ProductName" />
+                </div>
+                <div class="col-md-9">
+                    <div class="col-md-6">
+                        <nop-editor asp-for="ProductName" asp-disabled="true" />
+                        <input asp-for="ProductId" type="hidden" />
+                        <span asp-validation-for="ProductId"></span>
+                    </div>
+                    <div class="col-md-6">
+                        @if (Model.EntityId == 0)
+                        {
+                        <button type="button" id="btnAddNewProduct"
+                                onclick="window.open('@Url.Action("ProductAddPopup", "WidgetsProductPictureModifier" )', '_blank' , 'location=yes,height=800,width=800,scrollbars=no,status=yes' );"
+                                class="btn btn-primary">
+                            @T("Admin.Configuration.Widgets.ProductPictureModifier.SelectProduct")
+                        </button>
+                        }
+                    </div>
+                </div>
+            </div>
+            @*//ensure "ColorCode" has some default value. Otherwise farbtastic won't set a selected value*@
+            @*So double check the property*@
+            @if (string.IsNullOrEmpty(Model.ColorCode))
+            {
+            Model.ColorCode = ProductPictureModifierDefault.DefaultColorCode;
+            }
+            <div class="form-group">
+                <div class="col-sm-3">
+                    <nop-label asp-for="ColorCode" />
+                </div>
+                <div class="col-sm-9">
+                    <div class="col-md-6">
+                        <nop-editor asp-for="ColorCode" />
+                    </div>
+                    <span asp-validation-for="ColorCode"></span>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-sm-9 col-sm-offset-3">
+                    <div id="color-picker"></div>
+                    <script>
+                    $(document).ready(function() {
+                        $('#color-picker').farbtastic('#@Html.IdFor(model => model.ColorCode)');
+                    });
+                    </script>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

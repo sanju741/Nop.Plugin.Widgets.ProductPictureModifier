@@ -1,0 +1,17 @@
+﻿@using Nop.Services.Events
+@using Nop.Web.Framework.Events
+@model Nop.Plugin.Widgets.ProductPictureModifier.Models.ProductPictureModifierModel
+
+@inject IEventPublisher eventPublisher
+
+<div asp-validation-summary="None"></div>
+<input asp-for="Id" type="hidden" />
+
+<div class="content">
+    <div class="form-horizontal">
+        <nop-tabs id="product-picture-modifier-edit">
+            <nop-tab asp-name="tab-info" asp-title="@T("Admin.Widgets.ProductPictureModifier.Color.Info")" asp-default="true">@await Html.PartialAsync("_CreateOrUpdate.Color.cshtml", Model)</nop-tab>
+            <nop-tab asp-name="tab-requirements" asp-title="@T("Admin.Widgets.ProductPictureModifier.Logo.Info")">@await Html.PartialAsync("_CreateOrUpdate.Logo.cshtml", Model)</nop-tab>
+        </nop-tabs>
+    </div>
+</div>

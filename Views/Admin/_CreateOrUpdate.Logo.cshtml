@@ -1,0 +1,289 @@
+﻿@using Nop.Plugin.Widgets.ProductPictureModifier.Models
+@model Nop.Plugin.Widgets.ProductPictureModifier.Models.ProductPictureModifierModel
+<div class="panel-group">
+    @if (Model.ProductId > 0 && Model.CustomImagePath != "")
+    {
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <div id="customlogo-grid"></div>
+
+                <script>
+                    $(document).ready(function() {
+                        $("#customlogo-grid").kendoGrid({
+                            dataSource: {
+                                type: "json",
+                                transport: {
+                                    read: {
+                                        url: "@Html.Raw(Url.Action("CustomLogoList", "WidgetsProductPictureModifier"))",
+                                        type: "POST",
+                                        dataType: "json",
+                                        data: function additionalData() {
+                                            var data = {
+                                                ProductId: '@(Model.ProductId)'
+                                            };
+                                            addAntiForgeryToken(data);
+                                            return data;
+                                        }
+                                    },
+                                    destroy: {
+                                        url: "@Html.Raw(Url.Action("CustomLogoDelete", "WidgetsProductPictureModifier"))",
+                                        type: "POST",
+                                        dataType: "json",
+                                        data: addAntiForgeryToken
+                                    }
+                                },
+                                schema: {
+                                    data: "Data",
+                                    total: "Total",
+                                    errors: "Errors",
+                                    model: {
+                                        id: "Id"
+                                    }
+                                },
+                                error: function(e) {
+                                    display_kendoui_grid_error(e);
+                                    // Cancel the changes
+                                    this.cancelChanges();
+                                },
+                                pageSize: @(Model.LogoSearchModel.PageSize),
+                                serverPaging: true,
+                                serverFiltering: true,
+                                serverSorting: true
+                            },
+                            pageable: {
+                                refresh: true,
+                                pageSizes: [@(Model.LogoSearchModel.AvailablePageSizes)],
+                                @await Html.PartialAsync("_GridPagerMessages")
+                            },
+                            editable: {
+                                confirmation: "@T("Admin.Common.DeleteConfirmation")",
+                                mode: "inline"
+                            },
+                            scrollable: false,
+                            columns: [
+                                {
+                                    field: "Name",
+                                    title: "@T("Admin.Widgets.ProductPictureModifier.Fields.LogoType")",
+                                    width: 200
+                                },
+                                {
+                                    field: "LogoThumbnailUrl",
+                                    title: "@T("Admin.Widgets.ProductPictureModifier.Fields.Logo")",
+                                    template: '<img src="#:LogoThumbnailUrl#" />',
+                                    width: 200
+                                },{
+                                    field: "PictureThumbnailUrl",
+                                    title: "@T("Admin.Widgets.ProductPictureModifier.Logo.Fields.Picture")",
+                                    template: '<img src="#:PictureThumbnailUrl#" />',
+                                    width: 200
+                                },  {
+                                    command: { name: "destroy", text: "@T("Admin.Common.Delete")" },
+                                    title: "@T("Admin.Common.Delete")",
+                                    width: 200
+                                }
+                            ]
+                        });
+                    });
+                </script>
+            </div>
+        </div>
+        <div class="panel panel-default panel-search">
+            <div class="panel-heading">
+                @T("Admin.Widgets.ProductPictureModifier.Logo.AddNew")
+            </div>
+            <div class="panel-body">
+                <script>
+                    $(document).ready(function() {
+                        $('#addProductPicture').click(function() {
+                            CreateLogo(true);
+                        });
+                        $('#updateProductPicture').click(function () {
+                            CreateLogo(false);
+                        });
+                    });
+
+                    function CreateLogo(isNew) {
+                          var pictureId = $("#@Html.IdFor(model => model.LogoModel.PictureId)").val();
+
+                            if (pictureId === 0) {
+                                alert('Upload picture first');
+                                return;
+                            }
+
+                            $('#addProductPicture').attr('disabled', true);
+
+                            var logoModel = {
+                                AttributeValueId: $("#LogoModel_AttributeValueId").val(),
+                                PictureId: pictureId,
+                                ProductId: '@Model.ProductId',
+                                Opacity: $("#LogoModel_Opacity").val(),
+                                Size: $("#LogoModel_Size").val(),
+                                PositionId: $("#LogoModel_PositionId").val(),
+                                XCoordinate: $("input#LogoModel_XCoordinate").val(),
+                                YCoordinate: $("input#LogoModel_YCoordinate").val(),
+                                 MarkAsDefault: $("input#LogoModel_MarkAsDefault").is(":checked")
+                                 };
+
+                            if (isNew) {
+                                 logoModel.AttributeValueId = 0;
+                            }
+                            addAntiForgeryToken(logoModel);
+                            $.ajax({
+                                cache: false,
+                                type: "POST",
+                                url: "@Url.Action("CustomLogoAdd", "WidgetsProductPictureModifier")",
+                                data: logoModel,
+                                success: function (data) {
+                                    $('#addProductPicture').attr('disabled', false);
+                                    if (!data.Result) {
+                                        FormSubmitFailure(data.Errors);
+                                        return;
+                                    }
+                                    var grid = $("#customlogo-grid");
+                                    grid.data('kendoGrid').dataSource.read();
+                                    if (data.AttributeId>0) {
+                                        $("#updateProductPicture").css("display", "inline-block");
+                                    }
+                                    $("#LogoModel_AttributeValueId").val(data.AttributeId);
+
+                                    $('html, body').animate({
+                                        scrollTop: $("#customlogo-grid").offset().top
+                                    }, 200);
+                                },
+                                error: function (xhr, ajaxOptions, thrownError) {
+                                    alert('Failed to add product picture.');
+                                    $('#addProductPicture').attr('disabled', false);
+                                }
+                            });
+                    }
+
+                    function FormSubmitFailure(errors) {
+                        $.each(errors, function (index, value) {
+                            SetValidationError(index, value[0].ErrorMessage);
+                        });
+                    }
+
+                    function SetValidationError(id, message) {
+                        var span = $("span[data-valmsg-for=\"" + id + "\"]");
+                        if (span && span.length > 0) {
+                            $(span).html(message);
+                            if (message && message !== "") {
+                                $(span).removeClass("field-validation-valid");
+                                $(span).addClass("field-validation-no-valid");
+                                $(span).css("color", "red");
+                            } else {
+                                $(span).removeClass("field-validation-no-valid");
+                                $(span).addClass("field-validation-valid");
+                            }
+                        }
+                    }
+                </script>
+                <div class="form-group">
+                    <input asp-for="LogoModel.AttributeValueId" type="hidden" />
+                    <div class="col-md-3">
+                        <nop-label asp-for="LogoModel.PictureId" />
+                    </div>
+                    <div class="col-md-9">
+                        <nop-editor asp-for="LogoModel.PictureId" />
+                        <span asp-validation-for="LogoModel.PictureId"></span>
+                        <i>@T("Widgets.ProductPictureModifier.PictureInformation")</i>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-3">
+                        <nop-label asp-for="LogoModel.Opacity" />
+                    </div>
+                    <div class="col-md-9">
+                        <nop-editor asp-for="LogoModel.Opacity" />
+                        <span asp-validation-for="LogoModel.Opacity"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="col-md-3">
+                        <nop-label asp-for="LogoModel.Size" />
+                    </div>
+                    <div class="col-md-9">
+                        <nop-editor asp-for="LogoModel.Size" />
+                        <span asp-validation-for="LogoModel.Size"></span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-3">
+                        <div class="label-wrapper">
+                            <label class="control-label">@T("Widgets.ProductPictureModifiers.Fields.SelectPosition")</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6" id="product-image-div">
+                        <img id="product-image" src="@Model.CustomImagePath" style="border: 1px solid" />
+                        <br />
+                        <i>@T("Widgets.ProductPictureModifier.PositionInformation")</i>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="col-md-3">
+                        <nop-label asp-for="LogoModel.XCoordinate" />
+                    </div>
+                    <div class="col-md-9">
+                        <nop-editor asp-for="LogoModel.XCoordinate" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-3">
+                        <nop-label asp-for="LogoModel.YCoordinate" />
+                    </div>
+                    <div class="col-md-9">
+                        <nop-editor asp-for="LogoModel.YCoordinate" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-3">
+                        <nop-label asp-for="LogoModel.MarkAsDefault" />
+                    </div>
+                    <div class="col-md-9">
+                        <nop-editor asp-for="LogoModel.MarkAsDefault" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-9 col-md-offset-3">
+                        <div class="col-md-6">
+                            <button type="button" id="addProductPicture" class="btn btn-primary">@T("Admin.Widgets.ProductPictureModifier.Logo.AddButton")</button>
+                            <button type="button" id="updateProductPicture" class="btn btn-primary" style="display: none">@T("Admin.Widgets.ProductPictureModifier.Logo.UpdateButton")</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else if (Model.ProductId > 0 && Model.CustomImagePath == "")
+    {
+        <div class="panel panel-default">
+            <div class="panel-body">
+                @T("Admin.Widgets.ProductPictureModifier.Product.Image.Unavailable")
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="panel panel-default">
+            <div class="panel-body">
+                @T("Admin.Widgets.ProductPictureModifier.Attributes.Color.SaveBeforeEdit")
+            </div>
+        </div>
+    }
+</div>
+
+<script>
+    $(document).ready(function () {
+        $("img#product-image").on("click", function (event) {
+            var divPosition = $("#product-image-div").position();
+            var xCoordinate = event.pageX - this.offsetLeft - parseInt(divPosition.left);
+            var yCoordinate = event.pageY - this.offsetTop - parseInt(divPosition.top);
+            $("input#LogoModel_XCoordinate").val(xCoordinate + 10);
+            $("input#LogoModel_YCoordinate").val(yCoordinate);
+        });
+    });
+</script>
+
+
