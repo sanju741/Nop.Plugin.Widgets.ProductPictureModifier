@@ -1,0 +1,14 @@
+﻿@using Nop.Web.Framework.UI
+@model List<Nop.Plugin.Widgets.ProductPictureModifier.Models.ProductPictureModifierModel>
+
+<script>
+    $(document).ready(function () {
+        var model = @Html.Raw(Json.Serialize(Model));
+        $.each(model, function (i, value) {
+            if (value.CustomImagePath != null && value.CustomImagePath !== "") {
+                $("#btnEditOrderItem" + value.EntityId).closest('tr').find("td:first").children("img").attr('src',value.CustomImagePath);
+            }
+            $("#btnEditOrderItem" + value.EntityId).closest('tr').find("td:first").children("img").css("background-color", value.ColorCode);
+        });
+    });
+</script>

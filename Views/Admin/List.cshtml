@@ -1,0 +1,140 @@
+﻿@model Nop.Plugin.Widgets.ProductPictureModifier.Models.ProductPictureModifierSearchModel
+@{
+    Layout = "_ConfigurePlugin";
+    //page title
+    ViewBag.Title = T("Admin.Configuration.Widgets.ProductPictureModifier.List").Text;
+    //active menu item (system name)
+    Html.SetActiveMenuItemSystemName("ProductPictureModifierPlugin");
+}
+
+<nop-antiforgery-token />
+<div class="content-header clearfix">
+    <div class="pull-right">
+        <a asp-action="Create" class="btn bg-blue">
+            <i class="fa fa-plus-square"></i>
+            @T("Admin.Common.AddNew")
+        </a>
+    </div>
+</div>
+
+<div class="content">
+    <div class="form-horizontal">
+        <div class="panel-group">
+            @*<div class="panel panel-default panel-search">
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <div class="col-md-4">
+                                    <nop-label asp-for="Keywords" />
+                                </div>
+                                <div class="col-md-8">
+                                    <nop-editor asp-for="Keywords" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-md-8 col-md-offset-4">
+                                    <button type="button" id="search-mapper" class="btn btn-primary btn-search"><i class="fa fa-search"></i>@T("Admin.Common.Search")</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>*@
+
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <div id="mapper-grid"></div>
+                    <script>
+                        $(document).ready(function() {
+                            $("#mapper-grid").kendoGrid({
+                                dataSource: {
+                                    type: "json",
+                                    transport: {
+                                        read: {
+                                            url: "@Html.Raw(Url.Action("List", "WidgetsProductPictureModifier"))",
+                                            type: "POST",
+                                            dataType: "json",
+                                            data: function() {
+                                                var data = {
+                                                    Keywords: $('#@Html.IdFor(model => model.Keywords)').val()
+                                                };
+                                                addAntiForgeryToken(data);
+                                                return data;
+                                            }
+                                        }
+                                    },
+                                    schema: {
+                                        data: "Data",
+                                        total: "Total",
+                                        errors: "Errors"
+                                    },
+                                    error: function(e) {
+                                        display_kendoui_grid_error(e);
+                                        // Cancel the changes
+                                        this.cancelChanges();
+                                    },
+                                    pageSize: @(Model.PageSize),
+                                    serverPaging: true,
+                                    serverFiltering: true,
+                                    serverSorting: true
+                                },
+                                pageable: {
+                                    refresh: true,
+                                    pageSizes: [@(Model.AvailablePageSizes)],
+                                    @await Html.PartialAsync("_GridPagerMessages")
+                                },
+                                editable: {
+                                    confirmation: "@T("Admin.Common.DeleteConfirmation")",
+                                    mode: "inline"
+                                },
+                                scrollable: false,
+                                columns: [
+                                     {
+                                        field: "ProductName",
+                                        title: "@T("Widgets.ProductPictureModifier.ProductName")",
+                                        width: 150,
+                                        template: '<a target="_blank" href="/Admin/Product/Edit/#=ProductId#">#=ProductName#</a>'
+                                    },
+                                    {
+                                        field: "ColorCode",
+                                        title: "@T("Widgets.ProductPictureModifier.ColorCode")",
+                                        width: 150
+                                    },
+                                    {
+                                        field: "EntityId",
+                                        title: "@T("Admin.Common.Edit")",
+                                        width: 100,
+                                        headerAttributes: { style: "text-align:center" },
+                                        attributes: { style: "text-align:center" },
+                                        template: '<a class="btn btn-default" href="Edit/#=EntityId#"><i class="fa fa-pencil"></i>@T("Admin.Common.Edit")</a>'
+                                    }
+                                ]
+                            });
+                        });
+                    </script>
+
+                    <script>
+                        $(document).ready(function() {
+                            //search button
+                            $('#search-mapper').click(function() {
+                                //search
+                                var grid = $('#mapper-grid').data('kendoGrid');
+                                grid.dataSource.page(1); //new search. Set page size to 1
+                                //grid.dataSource.read(); we already loaded the grid above using "page" function
+                                return false;
+                            });
+
+                            $("#@Html.IdFor(model => model.Keywords)").keydown(function(event) {
+                                if (event.keyCode == 13) {
+                                    $("#search-mapper").click();
+                                    return false;
+                                }
+                            });
+                        });
+                    </script>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
